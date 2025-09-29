@@ -685,3 +685,185 @@ procdump(void)
     printf("\n");
   }
 }
+
+int
+getpname(int pid)
+{
+        struct proc *p;
+
+        for (p = proc; p < &proc[NPROC]; p++) {
+                acquire(&p->lock);
+                if (p->pid == pid) {
+                        printf("%s\n", p->name);
+                        release(&p->lock);
+                        return 0;
+                }
+                release(&p->lock);
+        }
+        return -1;
+}
+
+int
+getnice(int pid)
+{
+        struct proc *p;
+        int nice_value = -1;
+
+        for (p = proc; p < &proc[NPROC]; p++) {
+                acquire(&p->lock);
+                if (p->pid == pid) {
+                        nice_value = p->nice;
+                        release(&p->lock);
+                        return nice_value;
+                }
+                release(&p->lock);
+        }
+
+        return -1;
+}
+
+int
+setnice(int pid, int value)
+{
+        // nice값의 유효성 검사
+        if (value < 0 || value > 39) {
+                return -1; // 유효하지 않은 nice값이면 -1 리턴
+        }
+
+        struct proc *p;
+
+        for (p = proc; p < &proc[NPROC]; p++) {
+                acquire(&p->lock);
+                if (p->pid == pid) {
+                        p->nice = value;
+                        release(&p->lock);
+                        return 0; // 성공 시 0 리턴
+                }
+                release(&p->lock);
+        }
+
+        return -1; // 프로세스를 찾지 못하면 -1 리턴
+}
+
+void
+ps(int pid)
+{
+        struct proc *p;
+
+        if (pid == 0) {
+                printf("name\tpid\tstate\t\tnice\n");
+
+                for (p = proc; p < &proc[NPROC]; p++) {
+                        acquire(&p->lock);
+
+                        // UNUSED 프로세스 건너뜀
+                        if (p->state == UNUSED) {
+                                release(&p->lock);
+                                continue;
+                        }
+
+                        printf("%s\t%d\t", p->name, p->pid);
+
+                        switch(p->state) {
+                                case RUNNING:
+                                        printf("RUNNING\t\t");
+                                        break;
+                                case SLEEPING:
+                                        printf("SLEEPING\t");
+                                        break;
+                                case RUNNABLE:
+                                        printf("RUNNABLE\t");
+                                        break;
+                                case ZOMBIE:
+                                        printf("ZOMBIE\t\t");
+                                        break;
+                                case USED:
+                                        printf("USED\t\t");
+                                        break;
+                                default:
+                                        printf("UNKNOWN\t\t");
+                                        break;
+                        }
+                        printf("%d\n", p->nice);
+
+                        release(&p->lock);
+                }
+        }
+        // pid가 0이 아닌 경우 (특정 프로세스만 출력)
+        else {
+                for (p = proc; p < &proc[NPROC]; p++) {
+                        acquire(&p->lock);
+
+                        if (p->pid == pid && p->state != UNUSED) {
+                                printf("name\tpid\tstate\t\tnice\n");
+
+                                printf("%s\t%d\t", p->name, p->pid);
+
+                                switch(p->state) {
+                                        case RUNNING:
+                                                printf("RUNNING\t\t");
+                                                break;
+                                        case SLEEPING:
+                                                printf("SLEEPING\t");
+                                                break;
+                                        case RUNNABLE:
+                                                printf("RUNNABLE\t");
+                                                break;
+                                        case ZOMBIE:
+                                                printf("ZOMBIE\t\t");
+                                                break;
+                                        case USED:
+                                                printf("USED\t\t");
+                                                break;
+                                        default:
+                                                printf("UNKNOWN\t\t");
+                                                break;
+                                }
+                                printf("%d\n", p->nice);
+
+                                release(&p->lock);
+                                return;
+                        }
+
+                        release(&p->lock);
+                }
+        }
+}
+
+int
+waitpid(int pid)
+{
+        struct proc *p;
+        int found = 0;
+        struct proc *my_proc = myproc();
+
+        acquire(&wait_lock);
+
+        for (;;) {
+                found = 0;
+                for (p = proc; p < &proc[NPROC]; p++) {
+                        acquire(&p->lock);
+
+                        if (p->parent == my_proc && p->pid == pid) {
+                                found = 1;
+
+                                if (p->state == ZOMBIE) {
+                                        freeproc(p);
+                                        release(&p->lock);
+                                        release(&wait_lock);
+                                        return 0;
+                                }
+                                release(&p->lock);
+                        } else {
+                                release(&p->lock);
+                        }
+                }
+
+                if (!found) {
+                        release(&wait_lock);
+                        return -1;
+                }
+
+                sleep(my_proc, &wait_lock);
+        }
+}
