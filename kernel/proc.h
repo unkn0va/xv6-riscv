@@ -94,6 +94,12 @@ struct proc {
 
   int nice;
 
+  int weight; // nice 값에 따라 변환된 가중치
+  long long vruntime; // 가상 실행 시간
+  long long vdeadline; // 가상 데드라인
+  int runtime; // 실제 실행 시간(tick)
+  int time_slice; // 남은 타임 슬라이스 (tick)
+
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
 
