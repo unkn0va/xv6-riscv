@@ -68,6 +68,22 @@ usertrap(void)
     syscall();
   } else if((which_dev = devintr()) != 0){
     // ok
+    if (which_dev == 2) { // 타이머 인터럽트인지 확인
+                  struct proc *p = myproc();
+                  if (p && p->state == RUNNING) {
+                          p->runtime++;
+                          p->vruntime += (1024 / p->weight);
+                          p->time_slice--;
+
+                          // time_slice를 모두 소진했을 때만 yield() 호출
+                          if (p->time_slice == 0) {
+                                  p->vdeadline = p->vruntime + (5 * 1024 / p->weight);
+                                  p->time_slice = 5;
+                                  yield();
+                          }
+                  }
+                  lapiceoi();
+          }
   } else if((r_scause() == 15 || r_scause() == 13) &&
             vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
     // page fault on lazily-allocated page
