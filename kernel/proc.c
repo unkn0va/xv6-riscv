@@ -754,6 +754,8 @@ setnice(int pid, int value)
                 acquire(&p->lock);
                 if (p->pid == pid) {
                         p->nice = value;
+                        p->weight = weights[value];
+                        p->vdeadline = p->vruntime + (5 * 1024 / p->weight);
                         release(&p->lock);
                         return 0; // 성공 시 0 리턴
                 }
