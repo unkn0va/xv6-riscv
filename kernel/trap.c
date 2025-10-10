@@ -72,12 +72,12 @@ usertrap(void)
                   struct proc *p = myproc();
                   if (p && p->state == RUNNING) {
                           p->runtime++;
-                          p->vruntime += (1024 / p->weight);
+                          p->vruntime += (1024 / weights[p->nice]);
                           p->time_slice--;
 
                           // time_slice를 모두 소진했을 때만 yield() 호출
                           if (p->time_slice == 0) {
-                                  p->vdeadline = p->vruntime + (5 * 1024 / p->weight);
+                                  p->vdeadline = p->vruntime + (5 * 1024 / weights[p->nice]);
                                   p->time_slice = 5;
                                   yield();
                           }
