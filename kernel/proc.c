@@ -770,8 +770,42 @@ ps(int pid)
 {
         struct proc *p;
 
+        // Eligibility 계산을 위한 전역 값 준비
+        uint64 minVruntime = -1;
+        uint64 totalWeight = 0;
+        uint64 weightedVruntimeSum = 0;
+
+        // v_0 찾기
+        for (p = proc; p < &proc[NPROC]; p++) {
+          acquire(&p->lock);
+          if (p->state == RUNNABLE || p->state == RUNNING) {
+            if (minVruntime == -1 || p->vruntime < minVruntime) {
+              minVruntime = p->vruntime;
+            }
+          }
+          release(&p->lock);
+        }
+
+      // 계산
+      for (p = proc; p < &proc[NPROC]; p++) {
+        acquire(&p->lock);
+        if (p->state == RUNNABLE || p->state == RUNNING) {
+          totalWeight += weights[p->nice];
+          if (minVruntime != -1) { // runqueue가 비어있지 않을 때만 계산
+            weightedVruntimeSum += (p->vruntime - minVruntime) * weights[p->nice];
+          }
+        }
+        release(&p->lock);
+      }
+
+      // total tick 값을 안전하게 읽어옴
+      uint totalTicks;
+      acquire(&tickslock);
+      totalTicks = ticks;
+      release(&tickslock);
+        
         if (pid == 0) {
-                printf("name\tpid\tstate\t\tnice\n");
+                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\n");
 
                 for (p = proc; p < &proc[NPROC]; p++) {
                         acquire(&p->lock);
@@ -780,6 +814,18 @@ ps(int pid)
                         if (p->state == UNUSED) {
                                 release(&p->lock);
                                 continue;
+                        }
+
+                        // 개별 프로세스의 Eligibility 판별
+                        int is_eligible = 1; // 기본값은 true
+                        if (p->state == RUNNABLE || p->state == RUNNING) {
+                                if (minVruntime != -1) { // runqueue가 비어있을 경우를 대비
+                                        uint64 left = weightedVruntimeSum;
+                                        uint64 right = (p->vruntime - minVruntime) * totalWeight;
+                                        if (left < right) {
+                                                is_eligible = 0; // false
+                                        }
+                                }
                         }
 
                         printf("%s\t%d\t", p->name, p->pid);
@@ -805,6 +851,11 @@ ps(int pid)
                                         break;
                         }
                         printf("%d\n", p->nice);
+                        printf("%d\t\t", p->runtime / weights[p->nice]);
+                        printf("%d\t\t", p->runtime * 1000);
+                        printf("%d\t\t", p->vruntime);
+                        printf("%d\t\t", p->vdeadline);
+                        printf(is_eligible ? "true\n" : "false\n");
 
                         release(&p->lock);
                 }
@@ -815,8 +866,18 @@ ps(int pid)
                         acquire(&p->lock);
 
                         if (p->pid == pid && p->state != UNUSED) {
-                                printf("name\tpid\tstate\t\tnice\n");
+                                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\n");
 
+                                int is_eligible = 1; // 기본값은 true
+                                if (p->state == RUNNABLE || p->state == RUNNING) {
+                                      if (minVruntime != -1) { // runqueue가 비어있을 경우를 대비
+                                              uint64 left = weightedVruntimeSum;
+                                              uint64 right = (p->vruntime - minVruntime) * totalWeight;
+                                              if (left < right) {
+                                                      is_eligible = 0; // false
+                                              }
+                                      }
+                                }
                                 printf("%s\t%d\t", p->name, p->pid);
 
                                 switch(p->state) {
@@ -840,6 +901,11 @@ ps(int pid)
                                                 break;
                                 }
                                 printf("%d\n", p->nice);
+                                printf("%d\t\t", p->runtime / weights[p->nice]);
+                                printf("%d\t\t", p->runtime * 1000);
+                                printf("%d\t\t", p->vruntime);
+                                printf("%d\t\t", p->vdeadline);
+                                printf(is_eligible ? "true\n" : "false\n");
 
                                 release(&p->lock);
                                 return;
