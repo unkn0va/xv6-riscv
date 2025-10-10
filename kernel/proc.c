@@ -126,6 +126,12 @@ found:
   p->state = USED;
   p->nice = 20;
 
+  p->weight = 1024;
+  p->runtime = 0;
+  p->vruntime = 0;
+  p->time_slice = 5;
+  p->vdeadline = 5; // 0+(5*1024/1024) Initial vdeadline is 5
+
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
     freeproc(p);
