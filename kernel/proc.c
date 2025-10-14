@@ -907,7 +907,7 @@ ps(int pid)
                                         printf("UNKNOWN\t\t");
                                         break;
                         }
-                        printf("%ld\n", p->nice);
+                        printf("%d\n", p->nice);
                         printf("%ld\t\t", p->runtime / weights[p->nice]);
                         printf("%ld\t\t", p->runtime * 1000);
                         printf("%ld\t\t", p->vruntime);
@@ -957,7 +957,7 @@ ps(int pid)
                                                 printf("UNKNOWN\t\t");
                                                 break;
                                 }
-                                printf("%ld\n", p->nice);
+                                printf("%d\n", p->nice);
                                 printf("%ld\t\t", p->runtime / weights[p->nice]);
                                 printf("%ld\t\t", p->runtime * 1000);
                                 printf("%ld\t\t", p->vruntime);
