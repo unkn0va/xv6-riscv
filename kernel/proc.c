@@ -907,11 +907,11 @@ ps(int pid)
                                         printf("UNKNOWN\t\t");
                                         break;
                         }
-                        printf("%d\n", p->nice);
-                        printf("%d\t\t", p->runtime / weights[p->nice]);
-                        printf("%d\t\t", p->runtime * 1000);
-                        printf("%d\t\t", p->vruntime);
-                        printf("%d\t\t", p->vdeadline);
+                        printf("%ld\n", p->nice);
+                        printf("%ld\t\t", p->runtime / weights[p->nice]);
+                        printf("%ld\t\t", p->runtime * 1000);
+                        printf("%ld\t\t", p->vruntime);
+                        printf("%ld\t\t", p->vdeadline);
                         printf(is_eligible ? "true\n" : "false\n");
 
                         release(&p->lock);
@@ -957,11 +957,11 @@ ps(int pid)
                                                 printf("UNKNOWN\t\t");
                                                 break;
                                 }
-                                printf("%d\n", p->nice);
-                                printf("%d\t\t", p->runtime / weights[p->nice]);
-                                printf("%d\t\t", p->runtime * 1000);
-                                printf("%d\t\t", p->vruntime);
-                                printf("%d\t\t", p->vdeadline);
+                                printf("%ld\n", p->nice);
+                                printf("%ld\t\t", p->runtime / weights[p->nice]);
+                                printf("%ld\t\t", p->runtime * 1000);
+                                printf("%ld\t\t", p->vruntime);
+                                printf("%ld\t\t", p->vdeadline);
                                 printf(is_eligible ? "true\n" : "false\n");
 
                                 release(&p->lock);
