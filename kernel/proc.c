@@ -862,7 +862,7 @@ ps(int pid)
       release(&tickslock);
         
         if (pid == 0) {
-                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\n");
+                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks * 1000);
 
                 for (p = proc; p < &proc[NPROC]; p++) {
                         acquire(&p->lock);
@@ -923,7 +923,7 @@ ps(int pid)
                         acquire(&p->lock);
 
                         if (p->pid == pid && p->state != UNUSED) {
-                                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\n");
+                                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks * 1000);
 
                                 int is_eligible = 1; // 기본값은 true
                                 if (p->state == RUNNABLE || p->state == RUNNING) {
