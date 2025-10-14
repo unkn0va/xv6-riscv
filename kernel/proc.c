@@ -456,6 +456,46 @@ scheduler(void)
     intr_on();
     intr_off();
 
+    min_vdeadline = -1;
+    earliest_proc = 0;
+
+    for (p = proc; p < &proc[NPROC]; p++) {
+            acquire(&p->lock);
+            if (p->state == RUNNABLE) {
+                    // 현재까지 찾은 것보다 더 작은 vdeadline 발견하면 교체
+                    if (earliest_proc == 0 || p->vdeadline < min_vdeadline) {
+                            // 이전에 선택했던 프로세스 있으면 락 해제
+                            if (earliest_proc) {
+                                    release(&earliest_proc->lock);
+                            }
+
+                            // 새로운 최적 프로세스로 업뎃
+                            min_vdeadline = p->vdeadline;
+                            earliest_proc = p;
+                            continue; // earliest_proc의 락은 유지한 채로 다음 루프
+                    }
+            }
+            release(&p->lock);
+    }
+
+    // 선택된 프로세스로 컨텍스트스위칭
+    if (earliest_proc) {
+            // earliest_proc의 락은 이미 위 루프에서 잡혀있는 상태
+            earliest_proc->state = RUNNING;
+            c->proc = earliest_proc;
+
+            switch(&c->context, &earliest_proc->context);
+
+            // 프로세스 실행이 끝나고 돌아오면 락 해제
+            c->proc = 0;
+            release(&earliest_proc->lock);
+    }
+    else {
+            //실행할 프로세스 없으면 자
+            asm volatile("wfi");
+    }
+
+    /*
     int found = 0;
     for(p = proc; p < &proc[NPROC]; p++) {
       acquire(&p->lock);
@@ -478,7 +518,7 @@ scheduler(void)
       // nothing to run; stop running on this core until an interrupt.
       asm volatile("wfi");
     }
-  }
+  } */
 }
 
 // Switch to scheduler.  Must hold only p->lock
