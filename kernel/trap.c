@@ -70,6 +70,7 @@ usertrap(void)
     // ok
     if (which_dev == 2) { // 타이머 인터럽트인지 확인
                   struct proc *p = myproc();
+                  acquire(&p->lock);
                   if (p && p->state == RUNNING) {
                           p->runtime++;
                           p->vruntime += (1024 / weights[p->nice]);
@@ -79,6 +80,7 @@ usertrap(void)
                           if (p->time_slice == 0) {
                                   p->vdeadline = p->vruntime + (5 * 1024 / weights[p->nice]);
                                   p->time_slice = 5;
+                                  release(&p->lock);
                                   yield();
                           }
                   }
