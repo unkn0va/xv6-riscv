@@ -307,13 +307,13 @@ kfork(void)
 
   pid = np->pid;
 
-  release(&np->lock);
+  //release(&np->lock);
 
   acquire(&wait_lock);
   np->parent = p;
   release(&wait_lock);
 
-  acquire(&np->lock);
+  //acquire(&np->lock);
 
   // 부모로부터 vruntime과 나이스 값을 상속받음
   np->vruntime = p->vruntime;
