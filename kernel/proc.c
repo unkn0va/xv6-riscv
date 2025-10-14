@@ -314,10 +314,21 @@ kfork(void)
   release(&wait_lock);
 
   acquire(&np->lock);
+
+  // 부모로부터 vruntime과 나이스 값을 상속받음
+  np->vruntime = p->vruntime;
+  np->nice = p->nice;
+  np->weight = weights[np->nice];
+
+  np->runtime = 0;
+  np->time_slice = 5;
+
+  np->vdeadline = np->vruntime + (5*1024 / np->weight);
+
   np->state = RUNNABLE;
   release(&np->lock);
 
-  return pid;
+  return np->pid;
 }
 
 // Pass p's abandoned children to init.
