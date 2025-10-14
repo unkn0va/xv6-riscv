@@ -442,6 +442,10 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
 
+  // EEVDF를 위한 변수 선언
+  struct proc *earliest_proc = 0; // 가장 vdeadline이 빠른 프로세스를 저장할 포인터
+  uint64 min_vdeadline = -1;      // 가장 작은 vdeadline 값을 저장
+
   c->proc = 0;
   for(;;){
     // The most recent process to run may have had interrupts
