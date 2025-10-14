@@ -495,7 +495,7 @@ scheduler(void)
             earliest_proc->state = RUNNING;
             c->proc = earliest_proc;
 
-            switch(&c->context, &earliest_proc->context);
+            swtch(&c->context, &earliest_proc->context);
 
             // 프로세스 실행이 끝나고 돌아오면 락 해제
             c->proc = 0;
