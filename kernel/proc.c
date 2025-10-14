@@ -813,7 +813,7 @@ setnice(int pid, int value)
                 if (p->pid == pid) {
                         p->nice = value;
                         p->weight = weights[value];
-                        p->vdeadline = p->vruntime + (5 * 1024 / p->weight);
+                        p->vdeadline = p->vruntime + (5 * 1000 * 1024 / p->weight);
                         release(&p->lock);
                         return 0; // 성공 시 0 리턴
                 }
@@ -863,7 +863,7 @@ ps(int pid)
       release(&tickslock);
         
         if (pid == 0) {
-                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks * 1000);
+                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks);
 
                 for (p = proc; p < &proc[NPROC]; p++) {
                         acquire(&p->lock);
@@ -910,7 +910,7 @@ ps(int pid)
                         }
                         printf("%d\n", p->nice);
                         printf("%ld\t\t", p->runtime / weights[p->nice]);
-                        printf("%ld\t\t", p->runtime * 1000);
+                        printf("%ld\t\t", p->runtime);
                         printf("%ld\t\t", p->vruntime);
                         printf("%ld\t\t", p->vdeadline);
                         printf(is_eligible ? "true\n" : "false\n");
@@ -924,7 +924,7 @@ ps(int pid)
                         acquire(&p->lock);
 
                         if (p->pid == pid && p->state != UNUSED) {
-                                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks * 1000);
+                                printf("name\tpid\tstate\t\tpriority\truntime/weight\truntime\t\tvruntime\tvdeadline\tis_eligible\ttick %d\n", totalTicks);
 
                                 int is_eligible = 1; // 기본값은 true
                                 if (p->state == RUNNABLE || p->state == RUNNING) {
@@ -960,7 +960,7 @@ ps(int pid)
                                 }
                                 printf("%d\n", p->nice);
                                 printf("%ld\t\t", p->runtime / weights[p->nice]);
-                                printf("%ld\t\t", p->runtime * 1000);
+                                printf("%ld\t\t", p->runtime);
                                 printf("%ld\t\t", p->vruntime);
                                 printf("%ld\t\t", p->vdeadline);
                                 printf(is_eligible ? "true\n" : "false\n");
