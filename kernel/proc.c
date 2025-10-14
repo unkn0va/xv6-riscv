@@ -323,7 +323,7 @@ kfork(void)
   np->runtime = 0;
   np->time_slice = 5;
 
-  np->vdeadline = np->vruntime + (5*1024 / np->weight);
+  np->vdeadline = np->vruntime + (5 * 1000 * 1024 / np->weight);
 
   np->state = RUNNABLE;
   release(&np->lock);
