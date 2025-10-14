@@ -505,6 +505,7 @@ scheduler(void)
             //실행할 프로세스 없으면 자
             asm volatile("wfi");
     }
+  }
 
     /*
     int found = 0;
