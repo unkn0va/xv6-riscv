@@ -328,7 +328,7 @@ kfork(void)
   np->state = RUNNABLE;
   release(&np->lock);
 
-  return np->pid;
+  return pid;
 }
 
 // Pass p's abandoned children to init.
