@@ -651,7 +651,7 @@ wakeup(void *chan)
       acquire(&p->lock);
       if(p->state == SLEEPING && p->chan == chan) {
         p->time_slice = 5;
-        p->vdeadline = p->vruntime + (5*1024 / p->weight);
+        p->vdeadline = p->vruntime + (5 * 1000 * 1024 / p->weight);
         p->state = RUNNABLE;
       }
       release(&p->lock);
