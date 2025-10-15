@@ -465,7 +465,7 @@ scheduler(void)
     // to avoid a possible race between an interrupt
     // and wfi.
     intr_on();
-    intr_off();
+    //intr_off();
 
     min_vdeadline = -1;
     earliest_proc = 0;
