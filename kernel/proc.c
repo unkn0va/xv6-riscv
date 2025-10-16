@@ -141,7 +141,7 @@ found:
   p->runtime = 0;
   p->vruntime = 0;
   p->time_slice = 5;
-  p->vdeadline = 5; // 0+(5*1024/1024) Initial vdeadline is 5
+  p->vdeadline = 5000; // 0+(5*1000*1024/1024) Initial vdeadline is 5
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
