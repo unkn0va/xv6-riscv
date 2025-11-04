@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "defs.h"
 
+struct mmap_area mmap_areas[MAX_MMAP_AREAS];
+
 const int weights[40] = {
         88761, 71755, 56483, 46273, 36291,
         29154, 23254, 18705, 14949, 11916,
