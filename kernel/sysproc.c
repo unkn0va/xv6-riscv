@@ -250,7 +250,7 @@ sys_mmap(void)
 
                         // 페이지 테이블 매핑 (PTE_U: 사용자 접근 가능)
                         int perm = PTE_U;
-                        if (prot & PROT_READ) prem |= PTE_R;
+                        if (prot & PROT_READ) perm |= PTE_R;
                         if (prot & PROT_WRITE) perm |= PTE_W;
 
                         if (mappages(p->pagetable, current_va, PGSIZE, (uint64)mem, perm) != 0) {
