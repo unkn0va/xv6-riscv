@@ -7,6 +7,7 @@
 #include "defs.h"
 
 struct mmap_area mmap_areas[MAX_MMAP_AREAS];
+struct spinlock mmap_lock;
 
 const int weights[40] = {
         88761, 71755, 56483, 46273, 36291,
@@ -61,9 +62,17 @@ void
 procinit(void)
 {
   struct proc *p;
+  struct mmap_area *ma;
   
   initlock(&pid_lock, "nextpid");
   initlock(&wait_lock, "wait_lock");
+
+  initlock(&mmap_lock, "mmap_lock");
+
+   for (ma = mmap_areas; ma < &mmap_areas[MAX_MMAP_AREAS]; ma++) {
+          ma->p = 0;
+  }
+  
   for(p = proc; p < &proc[NPROC]; p++) {
       initlock(&p->lock, "proc");
       p->state = UNUSED;
