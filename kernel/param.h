@@ -18,3 +18,5 @@
 
 #define MAP_ANONYMOUS 0x1
 #define MAP_POPULATE 0x2
+
+#define MAX_MMAP_AREAS 64
