@@ -302,6 +302,52 @@ kfork(void)
   }
   np->sz = p->sz;
 
+  acquire(&mmap_lock);
+
+  struct mmap_area *ma;
+  // 부모(p)의 모든 mmap_area를 순회
+  for (ma = mmap_areas; ma < &mmap_areas[MAX_MMAP_AREAS]; ma++) {
+          if (ma->p == p) {
+
+                  // 자식(np)을 위한 빈 mmap_area 슬롯 찾기
+                  struct mmap_area *child_ma = 0;
+                  for (i = 0; i < MAX_MMAP_AREAS; i++) {
+                          if (mmap_areas[i].p == 0) {
+                                  child_ma = &mmap_areas[i];
+                                  break;
+                          }
+                  }
+
+                  if (child_ma == 0) {
+                          release(&mmap_lock);
+                          freeproc(np);
+                          release(&np->lock);
+                          return -1;
+                  }
+
+                  *child_ma = *ma;
+                  child_ma->p = np;
+                  if (child_ma->f)
+                          filedup(child_ma->f);
+                  for (uint64 va = MMAPBASE + ma->addr; va < MMAPBASE + ma->addr + ma->length; va += PGSIZE) {
+                          pte_t *pte = walk(p->pagetable, va, 0);
+                          if (pte && (*pte & PTE_V)) {
+                                  uint64 pa = PTE2PA(*pte);
+                                  uint flags = PTE_FLAGS(*pte);
+
+                                  if (mappages(np->pagetable, va, PGSIZE, pa, flags) != 0) {
+                                          release(&mmap_lock);
+                                          freeproc(np);
+                                          release(&np->lock);
+                                          return -1;
+                                  }
+                          }
+                  }
+          }
+  }
+
+  release(&mmap_lock);
+
   // copy saved user registers.
   *(np->trapframe) = *(p->trapframe);
 
