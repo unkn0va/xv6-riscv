@@ -268,6 +268,52 @@ sys_mmap(void)
 uint64
 sys_munmap(void)
 {
+  uint64 addr;
+  struct mmap_area *ma = 0;
+  struct proc *p = myproc();
+  
+  // 사용자로부터 addr 인자(0번째)를 가져옴
+  if (argaddr(0, &addr) < 0) {
+    return -1;
+  }
+  
+  // mmap_area 배열에서 해당 영역을 찾음
+  acquire(&mmap_lock);
+  for (ma = mmap_areas; ma < &mmap_areas[MAX_MMAP_AREAS]; ma++) {
+    // 소유자가 현재 프로세스이고, mmap() 호출 시 사용했던 addr이 일치하는지 확인
+    if (ma->p == p && ma->addr == addr) {
+      break; // 찾음
+    }
+  }
+  
+  if (ma == 0 || ma >= &mmap_areas[MAX_MMAP_AREAS]) {
+    release(&mmap_lock);
+    return -1; // 실패
+  }
+  
+  uint64 va_start = MMAPBASE + ma->addr;
+  int npages = ma->length / PGSIZE;
+  struct file *f = ma->f;
+
+  ma->p = 0;
+  ma->f = 0;
+  ma->length = 0;
+  ma->addr = 0;
+  ma->offset = 0;
+  ma->prot = 0;
+  ma->flags = 0;
+
+  release(&mmap_lock);
+
+  if (npages > 0) {
+    uvmunmap(p->pagetable, va_start, npages, 1);
+  }
+
+  if (f) {
+    fileclose(f);
+  }
+
+  return 1;
 }
 
 uint64
