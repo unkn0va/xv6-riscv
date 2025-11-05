@@ -6,9 +6,10 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
-#include "file.h"
+
 #include "sleeplock.h"
 #include "fs.h"
+#include "file.h"
 
 uint64
 sys_exit(void)
