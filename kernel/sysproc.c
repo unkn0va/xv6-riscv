@@ -265,6 +265,17 @@ sys_mmap(void)
         return MMAPBASE + addr;
 }
 
+uint64
+sys_munmap(void)
+{
+}
+
+uint64
+sys_freemem(void)
+{
+  return freemem();
+}
+
 int
 handle_page_fault(uint64 fault_va, uint64 scause)
 {
