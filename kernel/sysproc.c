@@ -342,7 +342,7 @@ handle_page_fault(uint64 fault_va, uint64 scause)
   }
 
   // 매핑 영역을 찾지 못한 경우 (잘못된 접근)
-  if (ma == 0 || ma >= mmap_areas[MAX_MMAP_AREAS]) {
+  if (ma == 0 || ma >= &mmap_areas[MAX_MMAP_AREAS]) {
     release(&mmap_lock);
     return -1; // 실패
   }
