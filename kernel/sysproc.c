@@ -264,3 +264,76 @@ sys_mmap(void)
         // 성공 시 시작 주소 반환
         return MMAPBASE + addr;
 }
+
+int
+handle_page_fault(uint64 fault_va, uint64 scause)
+{
+  struct proc *p = myproc();
+  struct mmap_area *ma = 0;
+  
+  // mmap_area 검색 및 검사
+  acquire(&mmap_lock);
+  
+  // 현재 프로세스에 속하고, 폴트 주소를 포함하는 mmap_area 찾음
+  for (ma = mmap_areas; ma < &mmap_areas[MAX_MMAP_AREAS]; ma++) {
+    if (ma->p == p && (MMAPBASE + ma->addr) <= fault_va && fault_va < (MMAPBASE + ma->addr + ma->length)) {
+                        break; // 찾음
+    }
+  }
+
+  // 매핑 영역을 찾지 못한 경우 (잘못된 접근)
+  if (ma == 0 || ma >= mmap_areas[MAX_MMAP_AREAS]) {
+    release(&mmap_lock);
+    return -1; // 실패
+  }
+
+  // 쓰기 금지 위반 검사 (쓰기 폴트인데, PROT_WRITE 권한이 없는 경우)
+  if (scause == 15 && !(ma->prot & PROT_WRITE)) {
+    release(&mmap_lock);
+    return -1; // 실패
+  }
+
+  // 페이지 할당 및 매핑 (폴트가 발생한 1페이지만)
+
+  // 폴트가 발생한 가상 주소의 시작점 (페이지 정렬)
+  uint64 va_page_start = PGROUNDDOWN(fault_va);
+
+  // 필요한 정보 복사
+  int flags = ma->flags;
+  int prot = ma->prot;
+  int offset = ma->offset + (va_page_start - (MMAPBASE + ma->addr));
+
+  struct file *f = ma->f;
+  if (f) filedup(f); // 파일 참조 카운트 증가
+
+  release(&mmap_lock);                                            
+  
+  // 물리 페이지 할당 및 채우기
+  char *mem = kalloc();
+  if (mem == 0) {
+    if (f) fileclose(f);
+    return -1;
+  }
+
+  if (flags & MAP_ANONYMOUS) {
+    memset(mem, 0, PGSIZE); // 익명 매핑은 0으로 채움
+  }
+  else {
+    ilock(f->ip);
+    readi(f->ip, 0, (uint64)mem, offset, PGSIZE);
+    iunlock(f->ip);
+    fileclose(f);
+  }
+
+  // 페이지 테이블 매핑
+  int perm = PTE_U;
+  if (prot & PROT_READ) perm |= PTE_R;
+  if (prot & PROT_WRITE) perm |= PTE_W;
+  
+  if (mappages(p->pagetable, va_page_start, PGSIZE, (uint64)mem, perm) != 0) {
+    kfree(mem);
+    return -1;
+  }
+
+  return 1; // 성공
+}
