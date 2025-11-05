@@ -108,6 +108,12 @@ void            ps(int);
 uint64          meminfo(void);
 int             waitpid(int);
 
+uint64          freemem(void);
+uint64          sys_mmap(void);
+int             sys_munmap(void);
+uint64          sys_freemem(void);
+int             handle_page_fault(uint64, uint64);
+
 // swtch.S
 void            swtch(struct context*, struct context*);
 
