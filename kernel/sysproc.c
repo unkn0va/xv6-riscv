@@ -7,6 +7,8 @@
 #include "proc.h"
 #include "vm.h"
 #include "file.h"
+#include "sleeplock.h"
+#include "fs.h"
 
 uint64
 sys_exit(void)
@@ -276,9 +278,7 @@ sys_munmap(void)
   struct proc *p = myproc();
   
   // 사용자로부터 addr 인자(0번째)를 가져옴
-  if (argaddr(0, &addr) < 0) {
-    return -1;
-  }
+  argaddr(0, &addr);
   
   // mmap_area 배열에서 해당 영역을 찾음
   acquire(&mmap_lock);
