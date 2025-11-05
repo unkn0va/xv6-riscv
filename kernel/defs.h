@@ -110,7 +110,7 @@ int             waitpid(int);
 
 uint64          freemem(void);
 uint64          sys_mmap(void);
-int             sys_munmap(void);
+uint64             sys_munmap(void);
 uint64          sys_freemem(void);
 int             handle_page_fault(uint64, uint64);
 
