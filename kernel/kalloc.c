@@ -29,7 +29,7 @@ void
 kinit()
 {
   initlock(&kmem.lock, "kmem");
-  free_count_page = 0;
+  free_page_count = 0;
   freerange(end, (void*)PHYSTOP);
 }
 
