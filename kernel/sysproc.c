@@ -280,12 +280,18 @@ sys_munmap(void)
   
   // 사용자로부터 addr 인자(0번째)를 가져옴
   argaddr(0, &addr);
+
+  if (addr < MMAPBASE) {
+    return -1;
+  }
+
+  uint64 mmap_offset = addr - MMAPBASE;
   
   // mmap_area 배열에서 해당 영역을 찾음
   acquire(&mmap_lock);
   for (ma = mmap_areas; ma < &mmap_areas[MAX_MMAP_AREAS]; ma++) {
     // 소유자가 현재 프로세스이고, mmap() 호출 시 사용했던 addr이 일치하는지 확인
-    if (ma->p == p && ma->addr == addr) {
+    if (ma->p == p && ma->addr == mmap_offset) {
       break; // 찾음
     }
   }
