@@ -6,6 +6,7 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "vm.h"
+#include "file.h"
 
 uint64
 sys_exit(void)
@@ -167,10 +168,12 @@ sys_mmap(void)
         int length, prot, flags, fd, offset;
 
         // 사용자 공간에서 인수를 가져옴
-        if (argaddr(0, &addr) < 0 || argint(1, &length) < 0 || argint(2, &prot) < 0 ||
-                        argint(3, &flags) < 0 || argint(4, &fd) < 0 || argint(5, &offset) < 0) {
-                return 0; // 실패 시 0 반환
-        }
+        argaddr(0, &addr);
+        argint(1, &length);
+        argint(2, &prot);
+        argint(3, &flags);
+        argint(4, &fd);
+        argint(5, &offset);
 
         // addr과 length가 페이지 정렬되었는지 확인
         if ((addr % PGSIZE) != 0 || (length % PGSIZE) != 0) {
