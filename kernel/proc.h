@@ -125,3 +125,6 @@ struct mmap_area {
   int flags;
   struct proc *p;
 };
+
+extern struct mmap_area mmap_areas[MAX_MMAP_AREAS];
+extern struct spinlock mmap_lock;
