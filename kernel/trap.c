@@ -87,10 +87,21 @@ usertrap(void)
                   }
                   else { release(&p->lock); }
           }
-  } else if((r_scause() == 15 || r_scause() == 13) &&
-            vmfault(p->pagetable, r_stval(), (r_scause() == 13)? 1 : 0) != 0) {
+  } else if(r_scause() == 15 || r_scause() == 13) {
     // page fault on lazily-allocated page
-  } else {
+    uint64 fault_va = r_stval();
+
+    if(fault_va >= MMAPBASE && handle_page_fault(fault_va, r_scause()) == 1) {
+      // mmap 핸들러 호출 성공 (1 반환)
+      // 페이지 테이블이 설정되었으므로 트랩에서 복귀
+    }
+    else {
+      printf("usertrap(): segfault scause 0x%lx pid=%d\n", r_scause(), p->pid);
+      printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
+      setkilled(p);
+    }
+  }
+  else {
     printf("usertrap(): unexpected scause 0x%lx pid=%d\n", r_scause(), p->pid);
     printf("            sepc=0x%lx stval=0x%lx\n", r_sepc(), r_stval());
     setkilled(p);
